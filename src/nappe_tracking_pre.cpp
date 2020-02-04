@@ -15,9 +15,6 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/common/impl/io.hpp>
 
-#include <cpd/version.hpp>
-#include <cpd/nonrigid.hpp>
-
 #include <iostream>
 #include <chrono>
 #include <string>
@@ -55,7 +52,6 @@ pcl::PointCloud<pcl::PointXYZRGB> * voxel_filter(pcl::PointCloud<pcl::PointXYZRG
 
 /** Tracking the surface of the deformable object. */
 void nappe_tracking_pre(const sensor_msgs::PointCloud2ConstPtr & input)
-
 {
 	cntRun++;
 	if (OUTPUT_DEBUG_INFO == true)
@@ -90,7 +86,7 @@ int main(int argc, char * argv[])
 
 	// Create ROS subscriber & publisher 
 	ros::Subscriber sub = nh.subscribe("input", 1, nappe_tracking_pre);
-	cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("nappe_tracking_pre", 1);
+	cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/nappe/filter/voxel", 1);
 
 	// Spin
 	ros::spin();
