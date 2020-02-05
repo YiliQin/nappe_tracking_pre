@@ -85,7 +85,7 @@ int main(int argc, char * argv[])
 	ros::NodeHandle nh;
 
 	// Create ROS subscriber & publisher 
-	ros::Subscriber sub = nh.subscribe("input", 1, nappe_tracking_pre);
+	ros::Subscriber sub = nh.subscribe("/camera/depth_registered/points", 1, nappe_tracking_pre);
 	cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/nappe/filter/voxel", 1);
 
 	// Spin
