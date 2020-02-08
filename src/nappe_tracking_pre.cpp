@@ -21,8 +21,9 @@
 
 #define OUTPUT_TIME_INFO true
 #define OUTPUT_DEBUG_INFO false
+#define VOXEL_LEAFSIZE 0.04
 
-ros::Publisher cloud_pub;
+ros::Publisher voxel_pub;
 int cntRun = 0;
 
 /**  Voxel filter. */
@@ -37,15 +38,14 @@ pcl::PointCloud<pcl::PointXYZRGB> * voxel_filter(pcl::PointCloud<pcl::PointXYZRG
 
 	vg.setInputCloud(cptrCloud);
 	// For nappe
-	//vg.setLeafSize(0.02, 0.02, 0.02);
-	vg.setLeafSize(0.04, 0.04, 0.04);
+	vg.setLeafSize(VOXEL_LEAFSIZE, VOXEL_LEAFSIZE, VOXEL_LEAFSIZE);
 	vg.filter(*ptrCloudVoxel);
 
 	auto toc_voxel = std::chrono::high_resolution_clock::now();
 	std::chrono::microseconds dur_ms;
 	std::chrono::duration<double, std::milli> dur_voxel_ms = toc_voxel - tic_voxel; 
 	if (OUTPUT_TIME_INFO == true)
-			std::cout << "Voxel filtering duration(ms) >>> " << dur_voxel_ms.count() << std::endl;
+			std::cout << "Voxel filter duration(ms) >>> " << dur_voxel_ms.count() << std::endl;
 
 	return ptrCloudVoxel;
 }
@@ -55,7 +55,7 @@ void nappe_tracking_pre(const sensor_msgs::PointCloud2ConstPtr & input)
 {
 	cntRun++;
 	if (OUTPUT_DEBUG_INFO == true)
-		std::cout << "Tracking ... " << cntRun << std::endl;
+		std::cout << "Callback running ... " << cntRun << std::endl;
 
   // Convert pcl::PCLPointCloud2 to pcl::PointCloud<T>
   pcl::PointCloud<pcl::PointXYZRGB> * ptrCloudRGB = new pcl::PointCloud<pcl::PointXYZRGB>;
@@ -69,24 +69,24 @@ void nappe_tracking_pre(const sensor_msgs::PointCloud2ConstPtr & input)
   sensor_msgs::PointCloud2 output;
   pcl::toROSMsg(*ptrVoxelFilter, output);
   output.header.stamp = ros::Time::now();
-  output.header.frame_id = "camera_rgb_optical_frame";
-  cloud_pub.publish(output);
+  output.header.frame_id = "camera_depth_optical_frame";
+  voxel_pub.publish(output);
 }
 
 int main(int argc, char * argv[])
 {
-
-	// Print out system info
+	// System info
 	std::cout << "PCL Version: " << PCL_VERSION << std::endl;
-	std::cout << "Nappe Pre-processing ...  " << std::endl;
+	std::cout << "Voxel flter(leaf): " << VOXEL_LEAFSIZE << std::endl;
+	std::cout << "Nappe Pre-process running ...  " << std::endl;
 
 	// Initialize ROS
 	ros::init(argc, argv, "nappe_tracking_pre");
 	ros::NodeHandle nh;
-
-	// Create ROS subscriber & publisher 
+	
+	// ROS subscriber & publisher 
 	ros::Subscriber sub = nh.subscribe("/camera/depth_registered/points", 1, nappe_tracking_pre);
-	cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/nappe/filter/voxel", 1);
+	voxel_pub = nh.advertise<sensor_msgs::PointCloud2>("/nappe/filter/voxel", 1);
 
 	// Spin
 	ros::spin();
